@@ -1,0 +1,1 @@
+Fraunces and Lora are licensed under the SIL Open Font License 1.1 (https://openfontlicense.org). Used only at build time to render share images.
