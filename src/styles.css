@@ -160,7 +160,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 .hero { padding: 4px var(--gutter) 44px; max-width: var(--wrap); margin: 0 auto; }
 .hero-in { display: grid; gap: 18px; }
 .hero-cat {
-  width: min(46vw, 210px); height: auto; color: var(--paper); margin: 0 auto 4px;
+  width: min(46vw, 210px); height: auto; color: var(--paper); margin: 32px auto 8px;
   filter: drop-shadow(0 18px 40px rgba(0,0,0,.45));
 }
 .hero-h {
@@ -170,6 +170,12 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 }
 .hero-p { margin: 0; color: var(--smoke); font-size: 1.125rem; max-width: 30em; }
 .hero-cta { display: flex; flex-wrap: wrap; align-items: center; gap: 14px 22px; margin-top: 6px; }
+/* phones and tablets: centred hero, subtitle on three deliberate lines */
+@media (max-width: 899px) {
+  .hero-in { text-align: center; justify-items: center; }
+  .hero-p span { display: block; }
+  .hero-cta { justify-content: center; }
+}
 
 /* the one orchestrated moment: the cat's lens lights up on arrival */
 @media (prefers-reduced-motion: no-preference) {
@@ -481,6 +487,7 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .hero { padding-top: 40px; padding-bottom: 72px; }
   .hero-in { grid-template-columns: 1.25fr .9fr; grid-template-areas: "h cat" "p cat" "cta cat"; align-items: center; column-gap: 64px; row-gap: 22px; }
   .hero-cat { grid-area: cat; width: 100%; max-width: 360px; margin: 0; justify-self: end; }
+  .hero-p span { display: inline; }
   .hero-h { grid-area: h; align-self: end; }
   .hero-p { grid-area: p; }
   .hero-cta { grid-area: cta; align-self: start; }

@@ -512,7 +512,7 @@ def home(eps, reads):
   <div class="hero-in">
     {inline_svg("logo-cat", "hero-cat", "7° andar")}
     <h1 class="hero-h">Cada filme que vemos é uma camada na lente que usamos para ver o mundo.</h1>
-    <p class="hero-p">Um podcast de cinema apresentado por Rai Rezende. Um filme por episódio.</p>
+    <p class="hero-p"><span>Um podcast de cinema</span> <span>apresentado por Rai Rezende.</span> <span>Um filme por episódio.</span></p>
     <div class="hero-cta">
       {play_btn(latest, f"Ouvir o episódio {latest['num']}", "play play-big")}
       <a class="ghost" href="/episodios/">Ver todos os episódios</a>
