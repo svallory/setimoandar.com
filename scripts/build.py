@@ -23,13 +23,14 @@ SITE = "https://setimoandar.com"
 SUBSTACK = "https://7andar.substack.com"
 EMAIL = "7andar.cast@gmail.com"
 
+# (label, url, simple-icons slug, brand colour)
 PLATFORMS = [
-    ("Spotify", "https://open.spotify.com/show/1lexfzrdhYuEGJJW1KjGUw", "spotify"),
-    ("Apple Podcasts", "https://podcasts.apple.com/br/podcast/7-andar/id1630207506", "apple"),
-    ("YouTube", "https://www.youtube.com/@7andar", "youtube"),
-    ("YouTube Music", "https://music.youtube.com/playlist?list=PLxSC-1bD99WKefTZhHvCAvDL5cAvWXd5a", "ytmusic"),
-    ("Pocket Casts", "https://pca.st/v8s1xfvb", "pocketcasts"),
-    ("Substack", SUBSTACK, "substack"),
+    ("Spotify", "https://open.spotify.com/show/1lexfzrdhYuEGJJW1KjGUw", "spotify", "#1ED760"),
+    ("Apple Podcasts", "https://podcasts.apple.com/br/podcast/7-andar/id1630207506", "applepodcasts", "#A35BE6"),
+    ("YouTube", "https://www.youtube.com/@7andar", "youtube", "#FF3B30"),
+    ("YouTube Music", "https://music.youtube.com/playlist?list=PLxSC-1bD99WKefTZhHvCAvDL5cAvWXd5a", "youtubemusic", "#FF3B30"),
+    ("Pocket Casts", "https://pca.st/v8s1xfvb", "pocketcasts", "#F43E37"),
+    ("Substack", SUBSTACK, "substack", "#FF6719"),
 ]
 
 MONTHS = ["janeiro", "fevereiro", "março", "abril", "maio", "junho", "julho",
@@ -213,6 +214,21 @@ def to_srgb(im):
     out = im.convert("RGB")
     out.info = {}
     return out
+
+
+def build_read_images(reads):
+    os.makedirs(os.path.join(DIST, "assets", "read"), exist_ok=True)
+    for r in reads:
+        src_url, r["img"] = r.get("img"), None
+        if not src_url:
+            continue
+        ext = src_url.rsplit(".", 1)[-1].split("?")[0][:4]
+        src = fetch(src_url, os.path.join(CACHE, "read", f"{r['slug']}.{ext}"))
+        im = Image.open(src)
+        im.seek(0)  # first frame of animated covers
+        im = ImageOps.fit(to_srgb(im), (800, 450), Image.LANCZOS)
+        im.save(os.path.join(DIST, "assets", "read", f"{r['slug']}.webp"), quality=80, method=6)
+        r["img"] = f"/assets/read/{r['slug']}.webp"
 
 
 def build_images(eps):
@@ -412,28 +428,68 @@ def floor_row(ep, latest=False):
 </li>"""
 
 
-def platforms_block(heading="Onde ouvir"):
-    items = "".join(f'<li><a class="plate" href="{u}" rel="noopener" target="_blank"><span>{n}</span>{icon("out", "i plate-i")}</a></li>'
-                    for n, u, _ in PLATFORMS)
-    return f"""<section class="listen" id="ouvir" aria-labelledby="ouvir-h">
-  <h2 id="ouvir-h" class="h2">{heading}</h2>
-  <p class="lede">Todos os episódios saem primeiro no Substack e chegam aos aplicativos no mesmo dia.</p>
-  <ul class="plates">{items}</ul>
+def platform_logo(slug):
+    raw = open(os.path.join(ROOT, "src", "img", "platforms", f"{slug}.svg")).read()
+    raw = re.sub(r"<title>.*?</title>", "", raw)
+    return raw.replace('<svg role="img" ', '<svg class="pl-logo" aria-hidden="true" fill="currentColor" ', 1)
+
+
+def platforms_block(heading="Onde ouvir", hid="ouvir"):
+    items = "".join(
+        f'<li><a class="pl" href="{u}" rel="noopener" target="_blank" style="--brand:{c}">'
+        f'<span class="pl-btn">{platform_logo(slug)}</span><span class="pl-name">{n}</span></a></li>'
+        for n, u, slug, c in PLATFORMS)
+    return f"""<section class="listen" id="{hid}" aria-labelledby="{hid}-h">
+  <h2 id="{hid}-h" class="h2">{heading}</h2>
+  <p class="lede">Episódio novo sai no Substack e chega aos aplicativos no mesmo dia.</p>
+  <div class="panel"><ul class="pls">{items}</ul></div>
+</section>"""
+
+
+def read_block(read):
+    if not read:
+        return ""
+    img = f'<img class="read-img" src="{read["img"]}" alt="" width="800" height="450" loading="lazy">' if read.get("img") else ""
+    return f"""<section class="read" aria-labelledby="read-h">
+  <h2 id="read-h" class="h2">Para ler</h2>
+  <p class="lede">Listas e textos da newsletter.</p>
+  <a class="read-card" href="{read['url']}" rel="noopener" target="_blank">
+    {img}
+    <span class="read-body">
+      <span class="read-title">{e(read['title'])}</span>
+      {f'<span class="read-sub">{e(read["subtitle"])}</span>' if read['subtitle'] else ''}
+      <span class="read-go">Ler no Substack {icon('out')}</span>
+    </span>
+  </a>
 </section>"""
 
 
 def subscribe_block():
+    # Same endpoint Substack's own embed posts to (7andar.substack.com/embed); creates a real free subscription.
     return f"""<section class="sub" aria-labelledby="sub-h">
   <div class="sub-in">
-    <h2 id="sub-h" class="h2">Receba cada episódio por <span class="nowrap">e-mail</span></h2>
-    <p>A newsletter é gratuita. Chega um e-mail por episódio, com o áudio e as notas do filme.</p>
-    <form class="sub-form" action="{SUBSTACK}/subscribe" method="get" target="_blank">
+    <div class="sub-text">
+      <h2 id="sub-h" class="h2">Receba cada episódio por <span class="nowrap">e-mail</span></h2>
+      <p>É de graça. Um e-mail por episódio, com o áudio e as notas do filme.</p>
+    </div>
+    <form class="sub-form" action="{SUBSTACK}/api/v1/free?nojs=true" method="post" target="_blank">
+      <input type="hidden" name="source" value="embed">
+      <input type="hidden" name="first_url" value="{SITE}/">
       <label class="sr" for="sub-email">Seu e-mail</label>
-      <input id="sub-email" name="email" type="email" required autocomplete="email" placeholder="seu@email.com">
+      <input id="sub-email" name="email" type="email" required autocomplete="email" inputmode="email" placeholder="seu@email.com">
       <button type="submit">Assinar</button>
     </form>
   </div>
 </section>"""
+
+
+def hub_block(read):
+    """Listen + read side by side on desktop, subscribe underneath."""
+    return f"""<div class="hub">
+  {platforms_block()}
+  {read_block(read)}
+  {subscribe_block()}
+</div>"""
 
 
 def series_ld(eps):
@@ -451,14 +507,6 @@ def home(eps, reads):
     meta = f'<p class="feat-film">{film_line(latest)}{" dirigido por " + e(latest["director"]) if latest["director"] else ""}</p>' if latest["film"] else ""
     rows = "".join(floor_row(ep, i == 0) for i, ep in enumerate(eps))
     read = reads[0] if reads else None
-    read_html = f"""<section class="read" aria-labelledby="read-h">
-  <h2 id="read-h" class="h2">Para ler</h2>
-  <a class="read-card" href="{read['url']}" rel="noopener" target="_blank">
-    <span class="read-title">{e(read['title'])}</span>
-    <span class="read-sub">{e(read['subtitle'])}</span>
-    <span class="read-go">Ler no Substack {icon('out')}</span>
-  </a>
-</section>""" if read else ""
     body = f"""
 <section class="hero">
   <div class="hero-in">
@@ -471,6 +519,8 @@ def home(eps, reads):
     </div>
   </div>
 </section>
+
+{hub_block(read)}
 
 <section class="feat" aria-labelledby="feat-h">
   <a class="feat-art-link" href="/episodios/{latest['slug']}/" tabindex="-1" aria-hidden="true">{art(latest, 'feat-art', eager=True)}</a>
@@ -499,13 +549,10 @@ def home(eps, reads):
   </div>
 </section>
 
-{platforms_block()}
-{read_html}
-{subscribe_block()}
 """
     return page(path="/", title="7° andar, um podcast de cinema por Rai Rezende",
                 desc="Cada filme que vemos é uma camada na lente que usamos para ver o mundo. Podcast de cinema apresentado por Rai Rezende.",
-                body=body, active="home", floor=str(eps[0]["num"]), jsonld=series_ld(eps))
+                body=body, active="home", jsonld=series_ld(eps))
 
 
 def episodes_page(eps):
@@ -521,7 +568,7 @@ def episodes_page(eps):
 {platforms_block("Ouça também nos aplicativos")}
 """
     return page(path="/episodios/", title="Episódios, 7° andar", active="list",
-                desc=f"Todos os {len(eps)} episódios do 7° andar, podcast de cinema de Rai Rezende.", body=body, floor=str(eps[0]["num"]),
+                desc=f"Todos os {len(eps)} episódios do 7° andar, podcast de cinema de Rai Rezende.", body=body,
                 jsonld=series_ld(eps))
 
 
@@ -587,7 +634,7 @@ def episode_page(ep, prev_ep, next_ep):
 """
     desc = (ep["subtitle"] + " " if ep["subtitle"] else "") + (f"Episódio {ep['num']} do 7° andar sobre {ep['film']} ({ep['year']})." if ep["film"] else f"Episódio {ep['num']} do 7° andar.")
     return page(path=f"/episodios/{ep['slug']}/", title=f"{ep['num']}. {ep['title']}, 7° andar",
-                desc=desc, body=body, active="list", og=ep["og"], floor=str(ep["num"]), jsonld=ld)
+                desc=desc, body=body, active="list", og=ep["og"], jsonld=ld)
 
 
 def about_page(eps):
@@ -642,6 +689,7 @@ def main():
     os.makedirs(CACHE, exist_ok=True)
     eps, reads = load_episodes()
     build_images(eps)
+    build_read_images(reads)
     write("index.html", home(eps, reads))
     write("episodios/index.html", episodes_page(eps))
     for i, ep in enumerate(eps):
@@ -654,8 +702,7 @@ def main():
     os.makedirs(os.path.join(DIST, "assets", "img"), exist_ok=True)
     for f in ("styles.css", "app.js"):
         shutil.copy(os.path.join(ROOT, "src", f), os.path.join(DIST, "assets", f))
-    for f in os.listdir(os.path.join(ROOT, "src", "img")):
-        shutil.copy(os.path.join(ROOT, "src", "img", f), os.path.join(DIST, "assets", "img", f))
+    shutil.copytree(os.path.join(ROOT, "src", "img"), os.path.join(DIST, "assets", "img"), dirs_exist_ok=True)
     cat = svg("cat").replace("currentColor", "#FFF7F2")
     write("favicon.svg", cat.replace('viewBox="0 0 654 600"', 'viewBox="-60 -90 774 774"').replace(
         "<path", '<rect x="-60" y="-90" width="774" height="774" rx="150" fill="#200704"/><path', 1))

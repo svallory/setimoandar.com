@@ -84,16 +84,16 @@
   }));
 
   // ---------------------------------------------------------------- floor indicator
-  // The episode list is the building: the newest episode is the top floor and
-  // everything below the list is the ground floor ("T", for térreo). The value is
-  // derived from scroll position alone, so it only moves one way as you scroll.
+  // The page is a 7-storey building: the top of the page is the 7th floor and the
+  // bottom is "P" (térreo/portaria, as Brazilian elevators show it). The floor comes
+  // from scroll progress alone, so it only ever moves one way as you scroll.
   const floor = $(".floor");
   const num = $("[data-floor]");
-  const rows = $$("[data-floor-of]");
-  const rank = (v) => (v === "T" ? 0 : +v || 0);
+  const FLOORS = ["7", "6", "5", "4", "3", "2", "1", "P"];
+  const rank = (v) => FLOORS.length - FLOORS.indexOf(v); // P lowest, 7 highest
+  const fixed = !FLOORS.includes(num.textContent);       // e.g. the 404 page shows "?"
   let shown = num.textContent, idle, arriving = false;
   const show = (v) => {
-    v = String(v);
     if (v === shown) return;
     floor.dataset.dir = rank(v) > rank(shown) ? "up" : "down";
     num.textContent = shown = v;
@@ -101,10 +101,10 @@
     idle = setTimeout(() => (floor.dataset.dir = "idle"), 900);
   };
   const floorAt = () => {
-    const mid = innerHeight * 0.5;
-    if (mid < rows[0].getBoundingClientRect().top) return rows[0].dataset.floorOf;
-    for (const r of rows) if (r.getBoundingClientRect().bottom >= mid) return r.dataset.floorOf;
-    return "T";
+    const max = document.documentElement.scrollHeight - innerHeight;
+    if (max <= 0) return "7";
+    const p = Math.min(1, Math.max(0, scrollY / max));
+    return FLOORS[Math.min(FLOORS.length - 1, Math.floor(p * FLOORS.length))];
   };
 
   // On the home page the nav follows the section in view, so "Ouvir" lights up on #ouvir.
@@ -127,23 +127,22 @@
     ticking = true;
     requestAnimationFrame(() => {
       ticking = false;
-      if (rows.length && !arriving) show(floorAt());
+      if (!fixed && !arriving) show(floorAt());
       if (listen) markNav();
     });
   };
   addEventListener("scroll", onScroll, { passive: true });
   addEventListener("resize", onScroll);
 
-  // arrival: on the first visit the indicator rides up to the top floor
-  if (isHome && rows.length && !reduce && !sessionStorage.getItem("arrived") && scrollY < 50) {
+  // arrival: on the first visit the elevator rides up from P to the 7th floor
+  if (isHome && !reduce && !sessionStorage.getItem("arrived") && scrollY < 50) {
     try { sessionStorage.setItem("arrived", "1"); } catch {}
     arriving = true;
-    const target = +rows[0].dataset.floorOf;
-    let i = 1; floor.dataset.dir = "up"; num.textContent = shown = String(i);
+    let i = FLOORS.length - 1; floor.dataset.dir = "up"; num.textContent = shown = FLOORS[i];
     const tick = setInterval(() => {
-      i += 1; num.textContent = shown = String(i);
-      if (i >= target) { clearInterval(tick); arriving = false; setTimeout(() => (floor.dataset.dir = "idle"), 500); onScroll(); }
-    }, 90);
+      i -= 1; num.textContent = shown = FLOORS[i];
+      if (i <= 0) { clearInterval(tick); arriving = false; setTimeout(() => (floor.dataset.dir = "idle"), 500); onScroll(); }
+    }, 140);
   } else {
     floor.dataset.dir = "idle";
     onScroll();

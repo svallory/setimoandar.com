@@ -254,52 +254,97 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   text-decoration-color: var(--rust); text-decoration-thickness: 2px; text-underline-offset: 5px;
 }
 
-/* ------------------------------------------------ listen: platform plates */
-.listen { max-width: var(--wrap); margin: 0 auto; padding: 56px var(--gutter) 8px; }
-.plates { list-style: none; padding: 0; margin: 22px 0 0; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.plate {
-  display: flex; align-items: center; justify-content: space-between; gap: 8px;
-  min-height: 58px; padding: 0 14px 0 16px;
-  border-radius: var(--radius-plate);
-  background: linear-gradient(180deg, #3a2420, #2a1411);
-  border: 1px solid #553b36;
-  box-shadow: inset 0 1px 0 rgba(255,255,255,.06), 0 2px 0 #120302;
-  text-decoration: none; font-weight: 600; font-size: .98rem; line-height: 1.2;
-  transition: border-color .2s, transform .1s;
+/* ------------------------------------------------ hub: listen + read + subscribe */
+.hub {
+  max-width: var(--wrap); margin: 0 auto;
+  padding: 8px var(--gutter) 56px;
+  display: grid; gap: 44px;
 }
-.plate:hover { border-color: var(--amber); }
-.plate:active { transform: translateY(1px); }
-.plate-i { width: 16px; height: 16px; color: var(--smoke-2); }
+.hub > section { padding: 0; max-width: none; margin: 0; min-width: 0; }
 
-/* ------------------------------------------------ reading card */
+/* platforms as an elevator call panel: one round button per app */
+.listen { max-width: var(--wrap); margin: 0 auto; padding: 56px var(--gutter) 8px; }
+.panel {
+  margin-top: 20px;
+  padding: 26px 12px 22px;
+  border-radius: 24px;
+  border: 1px solid #553b36;
+  background:
+    radial-gradient(circle at 14px 14px, #6a514c 2.5px, transparent 3.5px),
+    radial-gradient(circle at calc(100% - 14px) 14px, #6a514c 2.5px, transparent 3.5px),
+    radial-gradient(circle at 14px calc(100% - 14px), #6a514c 2.5px, transparent 3.5px),
+    radial-gradient(circle at calc(100% - 14px) calc(100% - 14px), #6a514c 2.5px, transparent 3.5px),
+    linear-gradient(165deg, #3a2420, #241009 70%);
+  box-shadow: inset 0 1px 0 rgba(255,255,255,.07), 0 18px 40px rgba(0,0,0,.35);
+}
+.pls { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px 4px; }
+.pl { display: grid; justify-items: center; gap: 10px; text-decoration: none; color: var(--smoke); padding: 4px 2px; border-radius: 14px; }
+.pl-btn {
+  display: grid; place-items: center;
+  width: 66px; height: 66px; border-radius: 50%;
+  color: var(--brand);
+  background: radial-gradient(circle at 50% 32%, #44302c, #1a0704 72%);
+  border: 2px solid #6a514c;
+  box-shadow: 0 0 0 4px #2a140f, 0 0 0 5px #4a3330, inset 0 -4px 8px rgba(0,0,0,.55);
+  transition: border-color .2s, box-shadow .2s, transform .12s var(--ease);
+}
+.pl-logo { width: 28px; height: 28px; }
+.pl-name { font-size: .84rem; line-height: 1.2; text-align: center; font-weight: 500; }
+.pl:hover .pl-btn, .pl:focus-visible .pl-btn {
+  border-color: var(--brand);
+  box-shadow: 0 0 0 4px #2a140f, 0 0 0 5px color-mix(in srgb, var(--brand) 55%, #4a3330), 0 0 22px color-mix(in srgb, var(--brand) 40%, transparent), inset 0 -4px 8px rgba(0,0,0,.55);
+}
+.pl:hover .pl-name { color: var(--paper); }
+.pl:active .pl-btn { transform: scale(.94); }
+.pl:focus-visible { outline: none; }
+
+/* reading card */
 .read { max-width: var(--wrap); margin: 0 auto; padding: 48px var(--gutter) 8px; }
 .read-card {
-  display: grid; gap: 6px; margin-top: 18px; padding: 22px;
-  border-radius: 18px; text-decoration: none;
-  background: var(--rust); color: var(--paper);
+  display: grid; grid-template-rows: auto 1fr;
+  margin-top: 20px; border-radius: 24px; overflow: hidden;
+  text-decoration: none; background: var(--rust); color: var(--paper);
+  box-shadow: 0 18px 40px rgba(0,0,0,.35);
+  transition: background .2s;
 }
 .read-card:hover { background: var(--rust-hi); }
-.read-title { font-size: 1.6rem; line-height: 1.1; font-weight: 800; }
+.read-img { width: 100%; height: auto; aspect-ratio: 16 / 9; object-fit: cover; }
+.read-body { display: grid; align-content: start; gap: 6px; padding: 18px 20px 22px; }
+.read-title { font-family: var(--display); font-variation-settings: "SOFT" 100; font-size: 1.55rem; line-height: 1.1; font-weight: 800; }
 .read-sub { font-style: italic; opacity: .9; }
-.read-go { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; font-weight: 600; }
+.read-go { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-weight: 600; }
 .read-go .i { width: 16px; height: 16px; }
 
-/* ------------------------------------------------ subscribe */
+/* subscribe */
 .sub { max-width: var(--wrap); margin: 0 auto; padding: 56px var(--gutter) 64px; }
-.sub-in { border-top: 2px solid var(--rust); padding-top: 28px; max-width: 640px; }
-.sub p { color: var(--smoke); margin: 10px 0 18px; }
-.sub-form { display: grid; gap: 10px; }
-.sub-form input {
-  min-height: 54px; padding: 0 16px; border-radius: 12px;
-  border: 1px solid #5b4440; background: #170503; color: var(--paper);
+.sub-in {
+  display: grid; gap: 18px;
+  padding: 26px 22px;
+  border-radius: 24px;
+  background: var(--paper); color: var(--ink);
+  position: relative; overflow: hidden;
+}
+.sub-in::after { /* the monocle again, faint */
+  content: ""; position: absolute; width: 220px; height: 220px; right: -90px; top: -110px;
+  border-radius: 50%; border: 8px solid var(--ink); opacity: .07; pointer-events: none;
+}
+.sub-text { position: relative; z-index: 1; }
+.sub .h2 { font-size: clamp(1.6rem, 6vw, 2.3rem); }
+.sub p { color: #6b4a42; margin: 8px 0 0; }
+.sub-form { display: grid; gap: 10px; position: relative; z-index: 1; }
+.sub-form input[type="email"] {
+  min-height: 54px; padding: 0 16px; border-radius: 14px;
+  border: 1.5px solid #d9c3b8; background: #fff; color: var(--ink);
   font: 400 1.0625rem var(--text);
 }
-.sub-form input::placeholder { color: var(--smoke-2); }
+.sub-form input::placeholder { color: #a8877d; }
+.sub-form input:focus-visible { outline: 3px solid var(--rust); outline-offset: 1px; }
 .sub-form button {
-  min-height: 54px; border: 0; border-radius: 12px; cursor: pointer;
-  background: var(--paper); color: var(--night); font: 700 1.0625rem var(--text);
+  min-height: 54px; border: 0; border-radius: 14px; cursor: pointer;
+  background: var(--ink); color: var(--paper); font: 700 1.0625rem var(--text);
+  transition: background .2s;
 }
-.sub-form button:hover { background: var(--amber); }
+.sub-form button:hover { background: var(--rust); }
 
 /* ------------------------------------------------ inner pages */
 .page-head { max-width: var(--wrap); margin: 0 auto; padding: 24px var(--gutter) 28px; }
@@ -414,9 +459,10 @@ a:focus-visible, button:focus-visible, input:focus-visible {
 /* ------------------------------------------------ wider screens */
 @media (min-width: 560px) {
   :root { --gutter: 28px; }
-  .plates { grid-template-columns: repeat(3, 1fr); }
   .sub-form { grid-template-columns: 1fr auto; }
   .sub-form button { padding: 0 26px; }
+  .pl-btn { width: 74px; height: 74px; }
+  .pl-logo { width: 32px; height: 32px; }
   .row-art { width: 132px; height: 88px; aspect-ratio: 3 / 2; }
 }
 
@@ -449,6 +495,18 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .row-art { width: 168px; height: 112px; }
 
   .paper-in { padding: 88px var(--gutter); }
+
+  .hub { grid-template-columns: 1.2fr 1fr; grid-template-areas: "listen read" "sub sub"; gap: 48px 48px; padding-bottom: 80px; }
+  .hub .listen { grid-area: listen; display: flex; flex-direction: column; }
+  .hub .read { grid-area: read; display: flex; flex-direction: column; }
+  .hub .sub { grid-area: sub; }
+  .hub .panel, .hub .read-card { flex: 1; }
+  .hub .panel { display: grid; align-content: center; padding: 34px 20px; }
+  .hub .pls { row-gap: 34px; }
+  .hub .pl-btn { width: 88px; height: 88px; }
+  .hub .pl-logo { width: 38px; height: 38px; }
+  .hub .pl-name { font-size: .92rem; }
+  .sub-in { grid-template-columns: 1fr 1.1fr; align-items: center; gap: 40px; padding: 36px 40px; }
   .paper::after { width: 560px; height: 560px; right: -160px; top: -200px; border-width: 14px; }
 
   .ep { padding: 0 var(--gutter); }
