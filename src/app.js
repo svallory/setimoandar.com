@@ -84,40 +84,68 @@
   }));
 
   // ---------------------------------------------------------------- floor indicator
+  // The episode list is the building: the newest episode is the top floor and
+  // everything below the list is the ground floor ("T", for térreo). The value is
+  // derived from scroll position alone, so it only moves one way as you scroll.
   const floor = $(".floor");
   const num = $("[data-floor]");
-  const setFloor = (n, dir) => {
-    if (num.textContent !== String(n)) num.textContent = n;
-    floor.dataset.dir = dir;
-  };
   const rows = $$("[data-floor-of]");
-  if (rows.length) {
-    let lastY = scrollY, idle;
-    const io = new IntersectionObserver((entries) => {
-      entries.forEach((en) => {
-        if (en.isIntersecting) setFloor(en.target.dataset.floorOf, scrollY >= lastY ? "down" : "up");
-      });
-      lastY = scrollY;
-      clearTimeout(idle);
-      idle = setTimeout(() => (floor.dataset.dir = "idle"), 900);
-    }, { rootMargin: "-45% 0px -50% 0px" });
-    rows.forEach((r) => io.observe(r));
-    // back above the building: we're on the 7th floor again
-    const top = new IntersectionObserver(([en]) => { if (en.isIntersecting) setFloor(num.dataset.home || "7", "idle"); });
-    const hero = $(".hero, .page-head");
-    if (hero) top.observe(hero);
-  }
-  num.dataset.home = num.textContent;
+  const rank = (v) => (v === "T" ? 0 : +v || 0);
+  let shown = num.textContent, idle, arriving = false;
+  const show = (v) => {
+    v = String(v);
+    if (v === shown) return;
+    floor.dataset.dir = rank(v) > rank(shown) ? "up" : "down";
+    num.textContent = shown = v;
+    clearTimeout(idle);
+    idle = setTimeout(() => (floor.dataset.dir = "idle"), 900);
+  };
+  const floorAt = () => {
+    const mid = innerHeight * 0.5;
+    if (mid < rows[0].getBoundingClientRect().top) return rows[0].dataset.floorOf;
+    for (const r of rows) if (r.getBoundingClientRect().bottom >= mid) return r.dataset.floorOf;
+    return "T";
+  };
 
-  // arrival: the indicator counts up to the floor on first load of the home page
-  if (document.body.dataset.page === "home" && !reduce && !sessionStorage.getItem("arrived")) {
+  // On the home page the nav follows the section in view, so "Ouvir" lights up on #ouvir.
+  const isHome = document.body.dataset.page === "home";
+  const listen = isHome && $("#ouvir");
+  const navLinks = $$(".top-nav a, .dock a");
+  const markNav = () => {
+    // "Ouvir" while the section sits in the upper half of the screen, below the header
+    const r = listen.getBoundingClientRect(), head = $(".top").getBoundingClientRect().bottom;
+    const key = r.top <= innerHeight * 0.5 && r.bottom > head + 40 ? "/#ouvir" : "/";
+    navLinks.forEach((a) => {
+      const h = a.getAttribute("href");
+      if (h === "/" || h === "/#ouvir") h === key ? a.setAttribute("aria-current", "page") : a.removeAttribute("aria-current");
+    });
+  };
+
+  let ticking = false;
+  const onScroll = () => {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(() => {
+      ticking = false;
+      if (rows.length && !arriving) show(floorAt());
+      if (listen) markNav();
+    });
+  };
+  addEventListener("scroll", onScroll, { passive: true });
+  addEventListener("resize", onScroll);
+
+  // arrival: on the first visit the indicator rides up to the top floor
+  if (isHome && rows.length && !reduce && !sessionStorage.getItem("arrived") && scrollY < 50) {
     try { sessionStorage.setItem("arrived", "1"); } catch {}
-    let i = 1; floor.dataset.dir = "up"; num.textContent = i;
+    arriving = true;
+    const target = +rows[0].dataset.floorOf;
+    let i = 1; floor.dataset.dir = "up"; num.textContent = shown = String(i);
     const tick = setInterval(() => {
-      i += 1; num.textContent = i;
-      if (i >= 7) { clearInterval(tick); setTimeout(() => (floor.dataset.dir = "idle"), 500); }
-    }, 130);
+      i += 1; num.textContent = shown = String(i);
+      if (i >= target) { clearInterval(tick); arriving = false; setTimeout(() => (floor.dataset.dir = "idle"), 500); onScroll(); }
+    }, 90);
   } else {
     floor.dataset.dir = "idle";
+    onScroll();
   }
 })();

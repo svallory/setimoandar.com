@@ -30,6 +30,8 @@
 
 *, *::before, *::after { box-sizing: border-box; }
 html { -webkit-text-size-adjust: 100%; scroll-behavior: smooth; }
+/* keep anchored sections clear of the sticky header */
+[id] { scroll-margin-top: 92px; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 body {
   margin: 0;
@@ -462,3 +464,4 @@ a:focus-visible, button:focus-visible, input:focus-visible {
   .foot-cat { grid-row: span 2; width: 84px; }
   .foot-links { grid-row: span 2; justify-items: end; }
 }
+.nowrap { white-space: nowrap; }

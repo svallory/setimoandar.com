@@ -425,7 +425,7 @@ def platforms_block(heading="Onde ouvir"):
 def subscribe_block():
     return f"""<section class="sub" aria-labelledby="sub-h">
   <div class="sub-in">
-    <h2 id="sub-h" class="h2">Receba cada episódio por e-mail</h2>
+    <h2 id="sub-h" class="h2">Receba cada episódio por <span class="nowrap">e-mail</span></h2>
     <p>A newsletter é gratuita. Chega um e-mail por episódio, com o áudio e as notas do filme.</p>
     <form class="sub-form" action="{SUBSTACK}/subscribe" method="get" target="_blank">
       <label class="sr" for="sub-email">Seu e-mail</label>
@@ -505,7 +505,7 @@ def home(eps, reads):
 """
     return page(path="/", title="7° andar, um podcast de cinema por Rai Rezende",
                 desc="Cada filme que vemos é uma camada na lente que usamos para ver o mundo. Podcast de cinema apresentado por Rai Rezende.",
-                body=body, active="home", jsonld=series_ld(eps))
+                body=body, active="home", floor=str(eps[0]["num"]), jsonld=series_ld(eps))
 
 
 def episodes_page(eps):
@@ -521,7 +521,7 @@ def episodes_page(eps):
 {platforms_block("Ouça também nos aplicativos")}
 """
     return page(path="/episodios/", title="Episódios, 7° andar", active="list",
-                desc=f"Todos os {len(eps)} episódios do 7° andar, podcast de cinema de Rai Rezende.", body=body,
+                desc=f"Todos os {len(eps)} episódios do 7° andar, podcast de cinema de Rai Rezende.", body=body, floor=str(eps[0]["num"]),
                 jsonld=series_ld(eps))
 
 
